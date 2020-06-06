@@ -7,22 +7,41 @@ from constants import SAMPLE_MATCHES, SPECIFIC_MATCH_SAMPLE
 
 PLAYER_HANDLES = {
     'clayschubiner',
-    'MarkMadness',
     'socom1880',
+    'MarkMadness',
+    'Chieffelix47',
+    'Rook',
+    'killacure24',
+    'Arturias13',
 }
 
 BATTLENET_IDS = [
     'daynine#1168',
 ]
 
+def make_api_request(url):
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(str(response.text))
+        return None
+    response_json = response.json()
+
 def get_specific_match_details(match_id):
+    # return SPECIFIC_MATCH_SAMPLE
+
     #   https://api.tracker.gg/api/v1/warzone/matches/8986566823157720677
-    return SPECIFIC_MATCH_SAMPLE
+    response = requests.get(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
+    if response.status_code != 200:
+        print(str(response.text))
+        return None
+    response_json = response.json()
+
+    return response_json
 
 def matches_for_player(battlenet_id):
-    for m in SAMPLE_MATCHES:
-        yield m
-    return
+    # for m in SAMPLE_MATCHES:
+    #     yield m
+    # return
 
     next = 'null'
     encoded_name = urllib.parse.quote(battlenet_id.lower())
