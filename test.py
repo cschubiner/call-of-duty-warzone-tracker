@@ -40,12 +40,18 @@ def matches_for_player(battlenet_id):
 
 def extract_stats_from_segment(seg, team_members):
     player_name = seg['attributes']['platformUserIdentifier']
-    stats = {'player_name': player_name, 'placement':seg['metadata']['placement']['value']}
+    stats = {'player_name': player_name, 'placement': seg['metadata']['placement']['value']}
+
 
     # for stat_name in ['kills', 'kdRatio', 'score', 'timePlayed', 'headshots', 'executions', 'assists', 'percentTimeMoving', 'longestStreak', 'scorePerMinute', 'damageDone', 'distanceTraveled', 'deaths', 'damageTaken', 'damageDonePerMinute']:
-    for stat_name, stat_dict in seg['stats'].items():
-        display_stat_name = stat_dict['displayName']
-        stats[display_stat_name] = stat_dict['value']
+    # for stat_name, stat_dict in seg['stats'].items():
+    for stat_name in ['kills', 'kdRatio', 'score', 'timePlayed', 'headshots', 'executions', 'assists', 'percentTimeMoving', 'longestStreak', 'scorePerMinute', 'damageDone', 'distanceTraveled', 'deaths', 'damageTaken', 'damageDonePerMinute', 'medalXp', 'objectiveTeamWiped', 'objectiveLastStandKill', 'matchXp', 'scoreXp', 'totalXp', 'challengeXp', 'objectiveDestroyedVehicleMedium', 'teamSurvivalTime', 'objectiveBrDownEnemyCircle3', 'objectiveBrDownEnemyCircle1', 'objectiveBrMissionPickupTablet', 'bonusXp', 'objectiveReviver', 'objectiveBrKioskBuy', 'objectiveBrDownEnemyCircle6', 'gulagDeaths', 'gulagKills', 'objectiveBrCacheOpen', 'miscXp']:
+        if stat_name not in seg['stats']:
+            stats[stat_name] = None
+        else:
+            stats[stat_name] = seg['stats'][stat_name]['value']
+            # display_stat_name = stat_dict['displayName']
+            # stats[display_stat_name] = stat_dict['value']
 
     return stats
 
@@ -55,6 +61,7 @@ already_seen_match_ids = set()
 with open('data_file.csv', 'w') as data_file:
     csv_writer = csv.writer(data_file)
     has_written_header = False
+    num_columns = None
 
     for battlenet_id in BATTLENET_IDS:
         for match in matches_for_player(battlenet_id):
@@ -78,5 +85,10 @@ with open('data_file.csv', 'w') as data_file:
                     if not has_written_header:
                         csv_writer.writerow(stats.keys())
                         has_written_header = True
+
+                    if not num_columns:
+                        num_columns = len(stats)
+                    else:
+                        assert num_columns == len(stats)
 
                     csv_writer.writerow(stats.values())
