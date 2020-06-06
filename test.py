@@ -1,4 +1,5 @@
 import csv
+import time
 import urllib
 
 import requests
@@ -20,21 +21,29 @@ BATTLENET_IDS = [
 ]
 
 def make_api_request(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        print(str(response.text))
-        return None
-    response_json = response.json()
+    to_sleep = 4
+    while True:
+        try:
+            print(f'Attempting to get {url}...')
+            response = requests.get(url)
+            if response.status_code != 200:
+                print(str(response.text))
+                raise Exception('non 200')
+
+            response_json = response.json()
+            return response_json
+        except Exception as e:
+            print(f'Failed: {e}')
+            print(f'Sleeping {to_sleep} seconds...')
+            time.sleep(to_sleep)
+            to_sleep *= 1.4
+
 
 def get_specific_match_details(match_id):
     # return SPECIFIC_MATCH_SAMPLE
 
     #   https://api.tracker.gg/api/v1/warzone/matches/8986566823157720677
-    response = requests.get(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
-    if response.status_code != 200:
-        print(str(response.text))
-        return None
-    response_json = response.json()
+    response_json = make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
 
     return response_json
 
@@ -46,12 +55,7 @@ def matches_for_player(battlenet_id):
     next = 'null'
     encoded_name = urllib.parse.quote(battlenet_id.lower())
     while next:
-        response = requests.get(
-            f'https://api.tracker.gg/api/v1/warzone/matches/battlenet/{encoded_name}?type=wz&next={next}')
-        response_json = response.json()
-        if response.status_code != 200:
-            print(str(response_json))
-            return
+        response_json = make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/battlenet/{encoded_name}?type=wz&next={next}')
 
         next = response_json['data']['metadata']['next']
         for m in response_json['data']['matches']:
@@ -91,7 +95,6 @@ with open('data_file.csv', 'w') as data_file:
             already_seen_match_ids.add(match_id)
 
             match_details = get_specific_match_details(match_id)
-            print(match)
             segments = match_details['data']['segments']
             placements = set()
             for seg in segments:
