@@ -8,15 +8,15 @@ from dateutil.parser import parser, parse
 
 from constants import SAMPLE_MATCHES, SPECIFIC_MATCH_SAMPLE
 
-PLAYER_HANDLES = {
-    'clayschubiner',
-    'socom1880',
-    'MarkMadness',
-    'Chieffelix47',
-    'Rook',
+PLAYER_HANDLES = [
     'killacure24',
+    'clayschubiner',
+    'MarkMadness',
+    'socom1880',
+    'Rook',
     'Arturias13',
-}
+    'Chieffelix47',
+]
 
 DEBUG = False
 
@@ -25,6 +25,7 @@ BATTLENET_IDS = [
     'Chieffelix47#1558',
     'socom1880#1790',
     'markmadness#1213',
+    'Rook#12135',
 ]
 
 def make_api_request(url, big_timeout=False):
