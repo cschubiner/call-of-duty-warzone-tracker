@@ -22,6 +22,9 @@ DEBUG = False
 
 BATTLENET_IDS = [
     'daynine#1168',
+    'Chieffelix47#1558',
+    'socom1880#1790',
+    'markmadness#1213',
 ]
 
 def make_api_request(url, big_timeout=False):
