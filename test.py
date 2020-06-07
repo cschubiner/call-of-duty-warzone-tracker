@@ -20,14 +20,22 @@ BATTLENET_IDS = [
     'daynine#1168',
 ]
 
-def make_api_request(url):
-    to_sleep = 4
+def make_api_request(url, big_timeout=False):
+    to_sleep = 10
     while True:
         try:
             print(f'Attempting to get {url}...')
             response = requests.get(url)
             if response.status_code != 200:
-                print(str(response.text))
+                err_text = str(response.text)
+                print(err_text)
+                if 'An unexpected error occured in our system' in err_text and to_sleep > 60:
+                    return None
+                if not big_timeout and to_sleep > 600:
+                    return None
+                if to_sleep > 2000:
+                    return None
+
                 raise Exception('non 200')
 
             response_json = response.json()
@@ -43,9 +51,7 @@ def get_specific_match_details(match_id):
     # return SPECIFIC_MATCH_SAMPLE
 
     #   https://api.tracker.gg/api/v1/warzone/matches/8986566823157720677
-    response_json = make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
-
-    return response_json
+    return make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
 
 def matches_for_player(battlenet_id):
     # for m in SAMPLE_MATCHES:
@@ -55,11 +61,16 @@ def matches_for_player(battlenet_id):
     next = 'null'
     encoded_name = urllib.parse.quote(battlenet_id.lower())
     while next:
-        response_json = make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/battlenet/{encoded_name}?type=wz&next={next}')
+        response_json = make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/battlenet/{encoded_name}?type=wz&next={next}', big_timeout=True)
+        if response_json is None:
+            return
 
         next = response_json['data']['metadata']['next']
         for m in response_json['data']['matches']:
             yield m
+
+        if not isinstance(next, int) or next < 10000000:
+            return
 
 def extract_stats_from_segment(seg, team_members):
     player_name = seg['attributes']['platformUserIdentifier']
@@ -95,6 +106,9 @@ with open('data_file.csv', 'w') as data_file:
             already_seen_match_ids.add(match_id)
 
             match_details = get_specific_match_details(match_id)
+            if match_details is None:
+                continue
+
             segments = match_details['data']['segments']
             placements = set()
             for seg in segments:
