@@ -76,7 +76,7 @@ def extract_stats_from_segment(seg, team_members):
     player_name = seg['attributes']['platformUserIdentifier']
     stats = {'player_name': player_name, 'placement': seg['metadata']['placement']['value']}
     for p_name in PLAYER_HANDLES:
-        stats['has_'+p_name.strip()] = p_name in team_members
+        stats['has_'+p_name.strip()] = 1 if p_name in team_members else 0
 
     # for stat_name in ['kills', 'kdRatio', 'score', 'timePlayed', 'headshots', 'executions', 'assists', 'percentTimeMoving', 'longestStreak', 'scorePerMinute', 'damageDone', 'distanceTraveled', 'deaths', 'damageTaken', 'damageDonePerMinute']:
     # for stat_name, stat_dict in seg['stats'].items():
@@ -120,6 +120,7 @@ with open('data_file.csv', 'w') as data_file:
                 for seg in team_segments:
                     stats = {
                         **extract_stats_from_segment(seg, team_members),
+                        'team_size': len(team_members),
                         'match_id': match['attributes']['id'],
                         'match_modeId': match['attributes']['modeId'],
                         'match_mapId': match['attributes']['mapId'],
