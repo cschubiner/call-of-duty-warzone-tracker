@@ -1,8 +1,10 @@
 import csv
 import time
 import urllib
+from datetime import datetime
 
 import requests
+from dateutil.parser import parser, parse
 
 from constants import SAMPLE_MATCHES, SPECIFIC_MATCH_SAMPLE
 
@@ -15,6 +17,8 @@ PLAYER_HANDLES = {
     'killacure24',
     'Arturias13',
 }
+
+DEBUG = False
 
 BATTLENET_IDS = [
     'daynine#1168',
@@ -48,15 +52,17 @@ def make_api_request(url, big_timeout=False):
 
 
 def get_specific_match_details(match_id):
-    # return SPECIFIC_MATCH_SAMPLE
+    if DEBUG:
+        return SPECIFIC_MATCH_SAMPLE
 
     #   https://api.tracker.gg/api/v1/warzone/matches/8986566823157720677
     return make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
 
 def matches_for_player(battlenet_id):
-    # for m in SAMPLE_MATCHES:
-    #     yield m
-    # return
+    if DEBUG:
+        for m in SAMPLE_MATCHES:
+            yield m
+        return
 
     next = 'null'
     encoded_name = urllib.parse.quote(battlenet_id.lower())
@@ -118,10 +124,13 @@ with open('data_file.csv', 'w') as data_file:
                 team_segments = [seg for seg in segments if seg['metadata']['placement']['value'] == placement]
                 team_members = [seg['attributes']['platformUserIdentifier'] for seg in team_segments]
                 for seg in team_segments:
+                    timestamp = match['metadata']['timestamp']
                     stats = {
                         **extract_stats_from_segment(seg, team_members),
                         'team_size': len(team_members),
                         'match_id': match['attributes']['id'],
+                        'match_timestamp': timestamp,
+                        'match_unix_timestamp': parse(timestr=timestamp).timestamp(),
                         'match_modeId': match['attributes']['modeId'],
                         'match_mapId': match['attributes']['mapId'],
                         'match_duration': match['metadata']['duration']['value'] / 1000,
