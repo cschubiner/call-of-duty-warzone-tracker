@@ -1,4 +1,5 @@
 import csv
+import pickle
 import time
 import urllib
 from datetime import datetime
@@ -21,11 +22,11 @@ PLAYER_HANDLES = [
 DEBUG = False
 
 BATTLENET_IDS = [
+    'markmadness#1213',
+    'Rook#12135',
     'daynine#1168',
     'Chieffelix47#1558',
     'socom1880#1790',
-    'markmadness#1213',
-    'Rook#12135',
 ]
 
 def make_api_request(url, big_timeout=False):
@@ -60,7 +61,16 @@ def get_specific_match_details(match_id):
         return SPECIFIC_MATCH_SAMPLE
 
     #   https://api.tracker.gg/api/v1/warzone/matches/8986566823157720677
-    return make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
+    if match_id in saved_matches:
+        return saved_matches[match_id]
+
+    match_json = make_api_request(f'https://api.tracker.gg/api/v1/warzone/matches/{match_id}')
+    saved_matches[match_id] = match_json
+
+    with open("saved_matches.p", "wb") as load_file:
+        pickle.dump(saved_matches, load_file)
+
+    return match_json
 
 def matches_for_player(battlenet_id):
     if DEBUG:
@@ -102,6 +112,11 @@ def extract_stats_from_segment(seg, team_members):
 
 
 already_seen_match_ids = set()
+
+saved_matches = dict()
+with open("saved_matches.p", "rb") as load_file:
+    saved_matches = pickle.load(load_file)
+
 
 with open('data_file.csv', 'w') as data_file:
     csv_writer = csv.writer(data_file)
